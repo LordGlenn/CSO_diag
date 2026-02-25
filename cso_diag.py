@@ -55,8 +55,8 @@ def parse_args():
     parser.add_argument(
         "-t", "--timeout",
         type=int,
-        default=900,
-        help="Max wait time in seconds for collection (default: 900)",
+        default=1800,
+        help="Max wait time in seconds for collection (default: 1800)",
     )
     return parser.parse_args()
 
