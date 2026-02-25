@@ -1,0 +1,112 @@
+name: Build CSO Diagnostics Collector
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: cso_diag-mac
+            chromium_cache: ~/Library/Caches/ms-playwright
+          - os: windows-latest
+            artifact: cso_diag-win
+            chromium_cache: ~\AppData\Local\ms-playwright
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install playwright pyinstaller
+
+      - name: Install Chromium
+        run: python -m playwright install chromium
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --onedir --name cso_diag \
+            --hidden-import playwright \
+            --hidden-import playwright.sync_api \
+            --hidden-import playwright._impl \
+            --hidden-import playwright._impl._driver \
+            --noconfirm --clean \
+            cso_diag.py
+        shell: bash
+
+      - name: Bundle Chromium (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          CHROMIUM_DIR=$(ls -d ~/Library/Caches/ms-playwright/chromium-*/chrome-mac-arm64 2>/dev/null | head -1)
+          if [ -z "$CHROMIUM_DIR" ]; then
+            CHROMIUM_DIR=$(ls -d ~/Library/Caches/ms-playwright/chromium-*/chrome-mac 2>/dev/null | head -1)
+          fi
+          if [ -z "$CHROMIUM_DIR" ]; then
+            echo "ERROR: Chromium not found"
+            ls -R ~/Library/Caches/ms-playwright/
+            exit 1
+          fi
+          echo "Copying Chromium from: $CHROMIUM_DIR"
+          cp -R "$CHROMIUM_DIR" dist/cso_diag/chromium
+
+      - name: Bundle Chromium (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $chromiumDir = Get-ChildItem "$env:LOCALAPPDATA\ms-playwright\chromium-*\chrome-win64" -Directory | Select-Object -First 1
+          if (-not $chromiumDir) {
+            $chromiumDir = Get-ChildItem "$env:LOCALAPPDATA\ms-playwright\chromium-*\chrome-win" -Directory | Select-Object -First 1
+          }
+          if (-not $chromiumDir) {
+            Write-Error "Chromium not found"
+            Get-ChildItem "$env:LOCALAPPDATA\ms-playwright" -Recurse -Directory
+            exit 1
+          }
+          Write-Host "Copying Chromium from: $($chromiumDir.FullName)"
+          Copy-Item -Recurse $chromiumDir.FullName "dist\cso_diag\chromium"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/cso_diag/
+          compression-level: 9
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create zip archives
+        run: |
+          cd artifacts
+          cd cso_diag-mac && zip -r ../cso_diag-mac.zip . && cd ..
+          cd cso_diag-win && zip -r ../cso_diag-win.zip . && cd ..
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/cso_diag-mac.zip
+            artifacts/cso_diag-win.zip
+          generate_release_notes: true
