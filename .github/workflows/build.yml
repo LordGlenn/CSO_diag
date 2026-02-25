@@ -59,6 +59,8 @@ jobs:
           fi
           echo "Copying Chromium from: $CHROMIUM_DIR"
           cp -R "$CHROMIUM_DIR" dist/cso_diag/chromium
+          chmod +x dist/cso_diag/cso_diag
+          find dist/cso_diag/chromium -name "Google Chrome for Testing" -exec chmod +x {} \;
 
       - name: Bundle Chromium (Windows)
         if: runner.os == 'Windows'
@@ -100,6 +102,8 @@ jobs:
       - name: Create zip archives
         run: |
           cd artifacts
+          chmod -R +x cso_diag-mac/cso_diag || true
+          find cso_diag-mac -name "Google Chrome for Testing" -exec chmod +x {} \; || true
           cd cso_diag-mac && zip -r ../cso_diag-mac.zip . && cd ..
           cd cso_diag-win && zip -r ../cso_diag-win.zip . && cd ..
 

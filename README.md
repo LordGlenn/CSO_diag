@@ -10,6 +10,16 @@ Pre-built binaries for macOS and Windows are available on the [Releases](https:/
 
 Download the zip for your platform, extract it, and run the executable directly. No Python or other dependencies required.
 
+### macOS First Run
+
+macOS will block the downloaded executable because it is not signed by Apple. After extracting the zip, run the following command once to remove the quarantine flag:
+
+```bash
+xattr -cr cso_diag/
+```
+
+Then you can run `./cso_diag/cso_diag` normally.
+
 ## Usage
 
 ```
