@@ -113,6 +113,7 @@ The packaged output will be in `dist/cso_diag/`. Distribute the entire directory
 
 ## Supported Devices
 
+- Zyxel USG FLEX 50H
 - Zyxel USG FLEX 100H
 - Zyxel USG FLEX 200H
 - Zyxel USG FLEX 500H
