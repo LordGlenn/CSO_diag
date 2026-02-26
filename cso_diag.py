@@ -48,6 +48,12 @@ def parse_args():
     parser.add_argument("username", help="Admin username")
     parser.add_argument("password", help="Admin password")
     parser.add_argument(
+        "-p", "--port",
+        type=int,
+        default=443,
+        help="Device HTTPS port (default: 443)",
+    )
+    parser.add_argument(
         "-o", "--output-dir",
         default=".",
         help="Output directory for downloaded file (default: current directory)",
@@ -66,7 +72,10 @@ def log(msg):
 
 
 def run(args):
-    base_url = f"https://{args.host}"
+    if args.port != 443:
+        base_url = f"https://{args.host}:{args.port}"
+    else:
+        base_url = f"https://{args.host}"
     output_dir = os.path.abspath(args.output_dir)
     os.makedirs(output_dir, exist_ok=True)
 
