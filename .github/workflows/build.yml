@@ -61,6 +61,9 @@ jobs:
           cp -R "$CHROMIUM_DIR" dist/cso_diag/chromium
           chmod +x dist/cso_diag/cso_diag
           find dist/cso_diag/chromium -name "Google Chrome for Testing" -exec chmod +x {} \;
+          # Fix Playwright driver node binary permissions
+          find dist/cso_diag/_internal/playwright/driver -type f -name "node" -exec chmod +x {} \; 2>/dev/null || true
+          find dist/cso_diag/_internal/playwright/driver -type f -name "package/lib/server/*.sh" -exec chmod +x {} \; 2>/dev/null || true
 
       - name: Bundle Chromium (Windows)
         if: runner.os == 'Windows'
@@ -104,6 +107,7 @@ jobs:
           cd artifacts
           chmod -R +x cso_diag-mac/cso_diag || true
           find cso_diag-mac -name "Google Chrome for Testing" -exec chmod +x {} \; || true
+          find cso_diag-mac -name "node" -path "*/playwright/driver/*" -exec chmod +x {} \; || true
           cd cso_diag-mac && zip -r ../cso_diag-mac.zip . && cd ..
           cd cso_diag-win && zip -r ../cso_diag-win.zip . && cd ..
 
