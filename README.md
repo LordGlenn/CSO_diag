@@ -38,6 +38,7 @@ cso_diag <device_ip> <username> <password> [options]
 
 | Option              | Description                                        | Default |
 |--------------------|----------------------------------------------------|---------|
+| `-p`, `--port`       | Device HTTPS port                                  | `443`   |
 | `-o`, `--output-dir` | Output directory for downloaded file               | `.`     |
 | `-t`, `--timeout`    | Max wait time in seconds for collection            | `1800`  |
 
@@ -49,6 +50,9 @@ cso_diag <device_ip> <username> <password> [options]
 
 # Save to a specific directory
 ./cso_diag 192.168.1.1 admin mypassword -o /tmp/diagnostics
+
+# Connect to a non-standard HTTPS port
+./cso_diag 192.168.1.1 admin mypassword -p 8443
 
 # Set a custom timeout (60 minutes)
 ./cso_diag 192.168.1.1 admin mypassword -t 3600
